@@ -97,25 +97,27 @@ export default function ProblemWorkspacePage({ params }: { params: Promise<{ slu
         })
       })
       const data = await res.json()
-      const rawScore = isPasskey ? 100 : (typeof data.score?.score === 'number' ? data.score.score : (understandingAnswer.length > 30 ? 80 : 40))
-      const feedback = data.score?.feedback || (rawScore >= 70 ? "Great job! Your solution strategy is correct and optimal." : "Your strategy needs more detail. Specify the data structure, time complexity, and edge cases.")
+
+      // Always use the server-returned score; never fall back to length heuristic
+      const rawScore = isPasskey ? 100 : (typeof data.score?.score === 'number' ? data.score.score : 10)
+      const feedback = data.score?.feedback
+        || (data.error ? `Evaluation error: ${data.error}` : 'Could not evaluate your answer. Please try again.')
       const isPassed = rawScore >= 70
       setUnderstanding({ score: rawScore, feedback })
       setUnderstandingPassed(isPassed)
-      if (isPassed) {
-        setTimeout(() => setPhase('coding'), 500)
-      }
     } catch {
+      // Network failure - do NOT auto-pass; show an error so user can retry
       setUnderstanding({
-        score: 100,
-        feedback: "Understanding verified successfully!"
+        score: 0,
+        feedback: '⚠️ Could not reach the evaluation server. Please check your connection and try again.'
       })
-      setUnderstandingPassed(true)
-      setTimeout(() => setPhase('coding'), 500)
+      setUnderstandingPassed(false)
     } finally {
       setEvaluating(false)
     }
   }
+
+
 
 
   const handleRun = async () => {
@@ -354,10 +356,10 @@ export default function ProblemWorkspacePage({ params }: { params: Promise<{ slu
                 >
                   {evaluating ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Evaluating with Claude AI...
+                      <Loader2 className="h-4 w-4 animate-spin" /> Evaluating with AI...
                     </>
                   ) : (
-                    'Evaluate Understanding'
+                    'Evaluate My Idea'
                   )}
                 </button>
               </div>

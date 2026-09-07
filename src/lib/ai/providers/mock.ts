@@ -31,13 +31,40 @@ export class MockAIProvider implements AIProvider {
   }
 
   async evaluateUnderstanding(problem: Problem, questions: UnderstandingQuestion[], answers: string[]): Promise<UnderstandingScore> {
-    const avgScore = answers.some(a => a.length > 10) ? 80 : 40;
+    const combined = answers.join(' ').trim().toLowerCase()
+    const words = combined.split(/\s+/).filter(Boolean)
+    const uniqueWords = new Set(words)
+
+    // Detect repetitive / spam answers
+    const uniqueRatio = words.length > 0 ? uniqueWords.size / words.length : 0
+    const isRepetitive = words.length > 5 && uniqueRatio < 0.4
+    const isTooShort = combined.length < 30
+
+    if (isTooShort || isRepetitive) {
+      return {
+        questionId: 'overall',
+        score: 15,
+        feedback: isRepetitive
+          ? '⚠️ Your answer appears to repeat the same words. Please write a genuine explanation of your algorithm, data structure, time complexity, and how you handle edge cases.'
+          : '⚠️ Your answer is too short. Please explain your approach in detail — mention the algorithm, data structure, and time complexity.'
+      }
+    }
+
+    // Reward answers that mention algorithm keywords
+    const keywords = ['hash', 'map', 'set', 'pointer', 'window', 'stack', 'queue', 'sort', 'binary', 'dp', 'dynamic', 'greedy', 'bfs', 'dfs', 'complexity', 'o(n', 'o(log', 'iterate', 'index', 'swap', 'prefix', 'two pointer', 'sliding', 'in-place', 'inplace']
+    const foundKeywords = keywords.filter(k => combined.includes(k))
+    const hasSubstance = foundKeywords.length >= 1 && uniqueWords.size >= 8
+
+    const score = hasSubstance ? 80 : (uniqueWords.size >= 6 ? 55 : 30)
     return {
       questionId: 'overall',
-      score: avgScore,
-      feedback: avgScore > 60 ? "Good understanding. You can proceed." : "You might want to reread the problem description."
-    };
+      score,
+      feedback: score >= 70
+        ? 'Good understanding. You can proceed to the coding workspace.'
+        : 'Your explanation needs more detail. Mention your data structure, algorithm steps, and time complexity to score 70%+.'
+    }
   }
+
 
   async getHint(problem: Problem, hintLevel: number, studentContext: string): Promise<string> {
     const hints = [
