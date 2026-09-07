@@ -1,0 +1,98 @@
+export const XP_CONFIG = {
+  solveWithoutHints: 100,
+  solveWithHints: 70,
+  findOwnBug: 30,
+  optimizeSolution: 40,
+  completeRevision: 30,
+  teachBack: 40,
+  dailyChallenge: 50,
+  edgeCaseChallenge: 20,
+  patternRecognition: 25,
+};
+
+export const ACHIEVEMENT_DEFINITIONS = [
+  {
+    id: "first_problem",
+    name: "First Steps",
+    description: "Solve your first problem on the platform.",
+    icon: "🚀",
+    unlockCondition: (stats: any) => stats.problemsSolved >= 1,
+  },
+  {
+    id: "solved_10",
+    name: "Getting the Hang of It",
+    description: "Solve 10 problems.",
+    icon: "🌟",
+    unlockCondition: (stats: any) => stats.problemsSolved >= 10,
+  },
+  {
+    id: "solved_50",
+    name: "Half Centurion",
+    description: "Solve 50 problems.",
+    icon: "🏆",
+    unlockCondition: (stats: any) => stats.problemsSolved >= 50,
+  },
+  {
+    id: "no_hint_master",
+    name: "No-Hint Master",
+    description: "Solve 5 problems without using any hints.",
+    icon: "🧠",
+    unlockCondition: (stats: any) => stats.noHintSolves >= 5,
+  },
+  {
+    id: "debugger",
+    name: "Debugger",
+    description: "Find and fix 10 bugs on your own.",
+    icon: "🐛",
+    unlockCondition: (stats: any) => stats.bugsFixed >= 10,
+  },
+  {
+    id: "pattern_hunter",
+    name: "Pattern Hunter",
+    description: "Recognize 20 algorithmic patterns.",
+    icon: "🔍",
+    unlockCondition: (stats: any) => stats.patternsRecognized >= 20,
+  },
+  {
+    id: "complexity_expert",
+    name: "Complexity Expert",
+    description: "Optimize 10 solutions after an initial working submission.",
+    icon: "⚡",
+    unlockCondition: (stats: any) => stats.solutionsOptimized >= 10,
+  },
+  {
+    id: "streak_7",
+    name: "Consistent Coder",
+    description: "Maintain a 7-day study streak.",
+    icon: "🔥",
+    unlockCondition: (stats: any) => stats.longestStreak >= 7,
+  },
+  {
+    id: "streak_30",
+    name: "Unstoppable",
+    description: "Maintain a 30-day study streak.",
+    icon: "🌋",
+    unlockCondition: (stats: any) => stats.longestStreak >= 30,
+  },
+  {
+    id: "understanding_master",
+    name: "Understanding Master",
+    description: "Score 90%+ in the understanding phase for 10 problems.",
+    icon: "📚",
+    unlockCondition: (stats: any) => stats.highUnderstandingScores >= 10,
+  },
+  {
+    id: "speed_demon",
+    name: "Speed Demon",
+    description: "Solve a medium problem in under 10 minutes.",
+    icon: "⏱️",
+    unlockCondition: (stats: any) => stats.fastMediumSolves >= 1,
+  },
+  {
+    id: "edge_case_expert",
+    name: "Edge Case Expert",
+    description: "Identify all edge cases in the understanding phase 10 times.",
+    icon: "🛡️",
+    unlockCondition: (stats: any) => stats.edgeCasesIdentified >= 10,
+  }
+];
