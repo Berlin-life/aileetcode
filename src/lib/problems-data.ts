@@ -345,9 +345,19 @@ export const RISING_BRAIN_TOPICS = [
 ]
 
 import { ARRAY_PROBLEMS } from './problems/arrays'
+import { STRING_PROBLEMS } from './problems/strings'
+import { BINARY_SEARCH_PROBLEMS } from './problems/binary-search'
+import { STACK_PROBLEMS } from './problems/stacks'
+import { DP_PROBLEMS } from './problems/dp'
+import { GRAPH_PROBLEMS } from './problems/graphs'
 
 export const ALL_PROBLEMS: Record<string, ProblemDefinition> = {
   ...ARRAY_PROBLEMS,
+  ...STRING_PROBLEMS,
+  ...BINARY_SEARCH_PROBLEMS,
+  ...STACK_PROBLEMS,
+  ...DP_PROBLEMS,
+  ...GRAPH_PROBLEMS,
   'valid-parentheses': {
     slug: 'valid-parentheses',
     title: 'Valid Parentheses',

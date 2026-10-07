@@ -11,17 +11,17 @@ import { MockAIProvider } from './mock'
 
 export class GeminiProvider implements AIProvider {
   private apiKey: string
-  private modelName = 'gemini-1.5-flash'
+  private modelName = 'gemini-3.6-flash'
   private mockFallback = new MockAIProvider()
 
   constructor() {
-    this.apiKey = process.env.GEMINI_API_KEY || 'AQ.Ab8RN6IqHCaNnoCEwL-BUApwrcKBeUvocuVpey_hE5usF01uQA'
+    this.apiKey = process.env.GEMINI_API_KEY || ''
   }
 
   private async askGeminiJSON<T>(prompt: string, systemInstruction: string = 'You are an expert AI LeetCode mentor. Return ONLY raw valid JSON without markdown wrapping.'): Promise<T> {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelName}:generateContent?key=${this.apiKey}`
+    let url = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelName}:generateContent?key=${this.apiKey}`
 
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -41,8 +41,23 @@ export class GeminiProvider implements AIProvider {
     })
 
     if (!res.ok) {
-      const errText = await res.text()
-      throw new Error(`Gemini API HTTP ${res.status}: ${errText}`)
+      // Try fallback model if 404
+      const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`
+      const fallbackRes = await fetch(fallbackUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+        })
+      })
+      if (fallbackRes.ok) {
+        res = fallbackRes
+      } else {
+        const errText = await res.text()
+        throw new Error(`Gemini API HTTP ${res.status}: ${errText}`)
+      }
     }
 
     const data = await res.json()
@@ -72,17 +87,21 @@ Output JSON as array of objects with fields: id (string), text (string), type (s
       const prompt = `You are a strict coding interview evaluator. Evaluate the student's solution idea for this problem.
 
 Problem: ${problem.title}
+Topics/Patterns: ${problem.topics?.join(', ') || ''} / ${problem.patterns?.join(', ') || ''}
 Description: ${problem.description}
 
 Student's Answer: ${JSON.stringify(answers)}
 
 STRICT EVALUATION RULES (you MUST follow these):
-1. If the answer is REPETITIVE (same word/phrase repeated multiple times like "prefix prefix prefix" or "sum sum sum sum"), give score 5-15 and explain why.
-2. If the answer is IRRELEVANT to the problem (random words, keyboard mashing, unrelated text), give score 5-15.
-3. If the answer is VAGUE with no algorithm details (just "use a loop" or "iterate array"), give score 30-50.
-4. If the answer mentions a WRONG approach that won't solve the problem, give score 20-45.
-5. Only give score >= 70 if the answer clearly explains: the algorithm/data structure used, approximate time complexity, and how it solves the problem.
-6. Give score >= 85 if the answer also covers edge cases.
+1. PROBLEM MISMATCH: Verify whether the student's strategy actually addresses "${problem.title}". If the student describes a solution for an ENTIRELY DIFFERENT problem (e.g., describing array partitioning / zero-swapping for a Two Sum problem, or tree traversal for an array problem), assign a score between 10 and 25 and explain the mismatch clearly in feedback.
+2. REPETITIVE / SPAM: If the answer repeats words or phrases, give score 5-15 and explain why.
+3. IRRELEVANT / FLUFF: If the answer contains random words or keyboard mashing, give score 5-15.
+4. VAGUE: If the answer is generic with no step-by-step algorithm details (e.g., just "use pointers" or "iterate array" without explaining how pointers move or how target is checked), give score 30-45.
+5. INCORRECT ALGORITHM: If the proposed approach will fail or is logically flawed for this problem, give score 20-45.
+6. QUALIFIED PASS (Score >= 70): Give score >= 70 ONLY if the student clearly explains:
+   - The correct algorithm and data structures specifically for "${problem.title}".
+   - Step-by-step logic (e.g. how pointers move, how target/values are evaluated).
+   - Expected time and space complexity.
 
 Output ONLY a JSON object (no markdown, no extra text):
 {

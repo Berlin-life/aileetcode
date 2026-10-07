@@ -55,10 +55,21 @@ Output JSON as an array of objects with keys: id (string), text (string), type (
 
   async evaluateUnderstanding(problem: Problem, questions: UnderstandingQuestion[], answers: string[]): Promise<UnderstandingScore> {
     try {
-      const prompt = `Evaluate the user's understanding of the problem based on their answers.
+      const prompt = `You are a strict coding interview evaluator. Evaluate the student's solution strategy for this problem.
+
 Problem: ${problem.title}
+Topics/Patterns: ${problem.topics?.join(', ') || ''} / ${problem.patterns?.join(', ') || ''}
+Description: ${problem.description}
+
 Questions: ${JSON.stringify(questions)}
-Answers: ${JSON.stringify(answers)}
+Student's Answers: ${JSON.stringify(answers)}
+
+STRICT EVALUATION RULES:
+1. PROBLEM MISMATCH: Verify whether the student's strategy actually addresses "${problem.title}". If the student describes a solution for an ENTIRELY DIFFERENT problem (e.g., zero-swapping for Two Sum II), assign a score between 10 and 25 and explain the mismatch clearly in feedback.
+2. REPETITIVE / SPAM: If repetitive or copied words, give score 5-15.
+3. VAGUE: If missing step-by-step logic, give score 30-45.
+4. INCORRECT ALGORITHM: If logic is flawed for this problem, give score 20-45.
+5. QUALIFIED PASS (Score >= 70): Give score >= 70 ONLY if the student clearly explains the specific algorithm for "${problem.title}", step-by-step logic, and time/space complexity.
 
 Output JSON object with keys: questionId (string, use 'overall'), score (number 0-100), feedback (string).`;
       return await this.askClaudeJSON<UnderstandingScore>(prompt);

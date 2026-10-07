@@ -7,23 +7,33 @@ import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/common/progress-bar'
 import { Award, Info, RefreshCw } from 'lucide-react'
 
-export function CodeReviewPanel() {
-  const { problem, testResults, setPhase } = useProblemStore()
+interface CodeReviewPanelProps {
+  code?: string
+  language?: string
+  problemId?: string
+}
+
+export function CodeReviewPanel({ code: propCode, language: propLanguage, problemId: propProblemId }: CodeReviewPanelProps = {}) {
+  const { problem } = useProblemStore()
   const [review, setReview] = React.useState<any>(null)
   const [loading, setLoading] = React.useState(true)
 
+  const effectiveProblemId = propProblemId || problem?.id || 'three-sum'
+  const effectiveCode = propCode || useProblemStore.getState().code
+  const effectiveLanguage = propLanguage || useProblemStore.getState().language || 'python'
+
   React.useEffect(() => {
     async function getReview() {
-      if (!problem || !testResults) return
+      if (!effectiveProblemId || !effectiveCode) return
       setLoading(true)
       try {
         const res = await fetch('/api/code-review', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            problemId: problem.id, 
-            code: useProblemStore.getState().code, 
-            language: useProblemStore.getState().language 
+            problemId: effectiveProblemId, 
+            code: effectiveCode, 
+            language: effectiveLanguage 
           })
         })
         const data = await res.json()
@@ -35,7 +45,7 @@ export function CodeReviewPanel() {
       }
     }
     getReview()
-  }, [problem, testResults])
+  }, [effectiveProblemId, effectiveCode, effectiveLanguage])
 
   if (loading) {
     return (

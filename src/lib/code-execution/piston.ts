@@ -70,8 +70,8 @@ export class PistonExecutor implements CodeExecutor {
       { input: 'Default Input 2', expectedOutput: 'Default Output 2' }
     ]
 
-    // Execute test cases
-    if (language === 'javascript' || language === 'python') {
+    // Execute test cases for wrapped languages
+    if (language === 'javascript' || language === 'python' || language === 'java' || language === 'typescript') {
       return this.executeWrappedTestCases(pistonUrl, language, request.code, testCases, startTime)
     }
 
@@ -160,7 +160,7 @@ export class PistonExecutor implements CodeExecutor {
     startTime: number
   ): Promise<CodeExecutionResult> {
     let wrappedCode = code
-    if (language === 'javascript') {
+    if (language === 'javascript' || language === 'typescript') {
       wrappedCode = `
 ${code}
 
@@ -179,21 +179,30 @@ function parseArgs(inp) {
   return res;
 }
 
-const fnKeys = Object.keys(this).filter(k => typeof this[k] === 'function' && k !== 'parseArgs');
-const fn = fnKeys.length > 0 ? this[fnKeys[fnKeys.length - 1]] : null;
+let targetFn = null;
+if (typeof threeSum === 'function') targetFn = threeSum;
+else if (typeof twoSum === 'function') targetFn = twoSum;
+else if (typeof moveZeroes === 'function') targetFn = moveZeroes;
+else if (typeof sortColors === 'function') targetFn = sortColors;
+else if (typeof maxArea === 'function') targetFn = maxArea;
+else if (typeof trap === 'function') targetFn = trap;
+
+if (!targetFn) {
+  const fnKeys = Object.keys(globalThis).filter(k => typeof globalThis[k] === 'function' && !['parseArgs', 'eval', 'require', 'fetch', 'setTimeout', 'clearTimeout'].includes(k));
+  if (fnKeys.length > 0) targetFn = globalThis[fnKeys[fnKeys.length - 1]];
+}
 
 for (const inp of testInputs) {
   try {
-    if (typeof moveZeroes === 'function') {
-      const args = parseArgs(inp);
-      moveZeroes(args[0]);
-      console.log("RESULT:" + JSON.stringify(args[0]));
-    } else if (typeof twoSum === 'function') {
-      const args = parseArgs(inp);
-      console.log("RESULT:" + JSON.stringify(twoSum(...args)));
-    } else if (fn) {
-      const args = parseArgs(inp);
-      console.log("RESULT:" + JSON.stringify(fn(...args)));
+    const args = parseArgs(inp);
+    if (targetFn) {
+      if ((targetFn.name === 'moveZeroes' || targetFn.name === 'sortColors') && args.length > 0) {
+        targetFn(args[0]);
+        console.log("RESULT:" + JSON.stringify(args[0]));
+      } else {
+        const res = targetFn(...args);
+        console.log("RESULT:" + JSON.stringify(res));
+      }
     } else {
       console.log("RESULT:No function found");
     }

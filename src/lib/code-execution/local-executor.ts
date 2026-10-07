@@ -42,22 +42,31 @@ export class LocalCodeExecutor implements CodeExecutor {
         const sandbox: Record<string, any> = { console: { log: () => {} }, result: undefined }
         const wrappedCode = `
           ${code}
-          // Extract last function name or entry point
           try {
-            if (typeof moveZeroes === 'function') {
-              const nums = ${this.parseInputToJS(tc.input)};
-              moveZeroes(nums);
-              result = JSON.stringify(nums);
-            } else if (typeof twoSum === 'function') {
-              const args = ${this.parseInputToJSArgs(tc.input)};
-              result = JSON.stringify(twoSum(...args));
-            } else {
-              const fnKeys = Object.keys(this).filter(k => typeof this[k] === 'function');
-              if (fnKeys.length > 0) {
-                const fn = this[fnKeys[fnKeys.length - 1]];
+            let targetFn = null;
+            if (typeof threeSum === 'function') targetFn = threeSum;
+            else if (typeof twoSum === 'function') targetFn = twoSum;
+            else if (typeof moveZeroes === 'function') targetFn = moveZeroes;
+            else if (typeof sortColors === 'function') targetFn = sortColors;
+            else if (typeof maxArea === 'function') targetFn = maxArea;
+            else if (typeof trap === 'function') targetFn = trap;
+
+            if (!targetFn) {
+              const fnKeys = Object.keys(this).filter(k => typeof this[k] === 'function' && k !== 'console');
+              if (fnKeys.length > 0) targetFn = this[fnKeys[fnKeys.length - 1]];
+            }
+
+            if (targetFn) {
+              if (targetFn.name === 'moveZeroes' || targetFn.name === 'sortColors') {
+                const nums = ${this.parseInputToJS(tc.input)};
+                targetFn(nums);
+                result = JSON.stringify(nums);
+              } else {
                 const args = ${this.parseInputToJSArgs(tc.input)};
-                result = JSON.stringify(fn(...args));
+                result = JSON.stringify(targetFn(...args));
               }
+            } else {
+              result = "Error: No function defined";
             }
           } catch(e) {
             result = "Error: " + e.message;

@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { getProblemBySlug, getNextProblemInSheetOrder, PatternQuiz } from '@/lib/problems-data'
+import { CodeReviewPanel } from '@/components/ai/code-review-panel'
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false, loading: () => (
   <div className="flex-1 flex items-center justify-center bg-[#1e1e2e] text-muted-foreground text-sm">
@@ -627,6 +628,9 @@ export default function ProblemWorkspacePage({ params }: { params: Promise<{ slu
                   </div>
                 ))}
               </div>
+
+              {/* AI Code Review & Improvement Suggestions */}
+              <CodeReviewPanel code={code} language={language} problemId={slug} />
 
               {/* Sheet Navigation Actions */}
               <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-card p-6 space-y-4">

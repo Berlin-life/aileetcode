@@ -6,16 +6,28 @@ import { GeminiProvider } from './providers/gemini'
 
 export function getAIProvider(): AIProvider {
   const provider = process.env.AI_PROVIDER || 'gemini'
+  const geminiKey = process.env.GEMINI_API_KEY
+  const isGeminiValid = Boolean(geminiKey && geminiKey.length > 20)
+
+  const anthropicKey = process.env.ANTHROPIC_API_KEY
+  const isAnthropicValid = Boolean(anthropicKey && anthropicKey.startsWith('sk-ant'))
+
   switch (provider) {
     case 'gemini':
-      return new GeminiProvider()
+      if (isGeminiValid) {
+        return new GeminiProvider()
+      }
+      return new MockAIProvider()
     case 'anthropic':
-      return new AnthropicProvider()
+      if (isAnthropicValid) {
+        return new AnthropicProvider()
+      }
+      return new MockAIProvider()
     case 'openai':
       return new OpenAIProvider()
     case 'mock':
     default:
-      if (process.env.GEMINI_API_KEY) {
+      if (isGeminiValid) {
         return new GeminiProvider()
       }
       return new MockAIProvider()
